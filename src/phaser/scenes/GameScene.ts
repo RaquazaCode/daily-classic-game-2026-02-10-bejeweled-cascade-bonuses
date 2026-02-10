@@ -35,6 +35,22 @@ export class GameScene extends Phaser.Scene {
 
   private lastAnimationSignature = "";
 
+  private readonly onPauseKeyDown = () => {
+    this.runtime.togglePause();
+  };
+
+  private readonly onRestartKeyDown = () => {
+    this.runtime.restart();
+  };
+
+  private readonly onFullscreenKeyDown = () => {
+    if (this.scale.isFullscreen) {
+      this.scale.stopFullscreen();
+    } else {
+      this.scale.startFullscreen();
+    }
+  };
+
   constructor() {
     super("game");
   }
@@ -55,6 +71,7 @@ export class GameScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.unsubscribe?.();
       this.unsubscribe = null;
+      this.cleanupKeyboardBindings();
     });
   }
 
@@ -193,21 +210,20 @@ export class GameScene extends Phaser.Scene {
     this.keyR = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     this.keyF = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
 
-    keyboard.on("keydown-P", () => {
-      this.runtime.togglePause();
-    });
+    keyboard.on("keydown-P", this.onPauseKeyDown);
+    keyboard.on("keydown-R", this.onRestartKeyDown);
+    keyboard.on("keydown-F", this.onFullscreenKeyDown);
+  }
 
-    keyboard.on("keydown-R", () => {
-      this.runtime.restart();
-    });
+  private cleanupKeyboardBindings() {
+    const keyboard = this.input.keyboard;
+    if (!keyboard) {
+      return;
+    }
 
-    keyboard.on("keydown-F", () => {
-      if (this.scale.isFullscreen) {
-        this.scale.stopFullscreen();
-      } else {
-        this.scale.startFullscreen();
-      }
-    });
+    keyboard.off("keydown-P", this.onPauseKeyDown);
+    keyboard.off("keydown-R", this.onRestartKeyDown);
+    keyboard.off("keydown-F", this.onFullscreenKeyDown);
   }
 
   private applyState(state: GameState) {

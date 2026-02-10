@@ -26,6 +26,7 @@ function bootRuntimeFromParams() {
     return;
   }
 
+  game.scene.stop("menu");
   runtime.startGame();
   game.scene.start("game");
 
