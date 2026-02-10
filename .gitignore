@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+playwright/*.json
+playwright/*.png
+playwright/*.jpg
+playwright/*.jpeg
+playwright/*.webp
+playwright/*.gif
