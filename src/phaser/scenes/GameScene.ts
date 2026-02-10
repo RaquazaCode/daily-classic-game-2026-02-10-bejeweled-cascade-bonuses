@@ -5,12 +5,12 @@ import {
   BOARD_MAX_WIDTH,
   BOARD_ROWS,
   GEM_COLORS,
-  HUD_HEIGHT,
 } from "../../constants";
 import type { Cell, GameState } from "../../types";
 import { getRuntime } from "../runtime_store";
 import { drawBackdrop } from "../ui/components";
-import { UI_FONT, UI_THEME } from "../ui/theme";
+import { UI_THEME } from "../ui/theme";
+import { LuxeVignettePipeline } from "../pipelines/LuxeVignettePipeline";
 
 export class GameScene extends Phaser.Scene {
   private runtime = getRuntime();
@@ -20,14 +20,11 @@ export class GameScene extends Phaser.Scene {
   private boardY = 0;
   private tileSize = 0;
 
-  private titleText?: Phaser.GameObjects.Text;
-  private statsText?: Phaser.GameObjects.Text;
-  private detailText?: Phaser.GameObjects.Text;
-  private messageText?: Phaser.GameObjects.Text;
-  private pauseOverlay?: Phaser.GameObjects.Container;
-
   private gemSprites: Phaser.GameObjects.Image[][] = [];
   private selectionRing?: Phaser.GameObjects.Rectangle;
+  private boardContainer?: Phaser.GameObjects.Container;
+  private boardPulse?: Phaser.GameObjects.Rectangle;
+  private pauseOverlay?: Phaser.GameObjects.Container;
 
   private keyP?: Phaser.Input.Keyboard.Key;
   private keyR?: Phaser.Input.Keyboard.Key;
@@ -51,15 +48,28 @@ export class GameScene extends Phaser.Scene {
     }
   };
 
+  private readonly onScaleResize = () => {
+    this.scene.restart();
+  };
+
   constructor() {
     super("game");
   }
 
   create() {
     drawBackdrop(this);
+
+    if (this.renderer.type === Phaser.WEBGL) {
+      const renderer = this.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
+      const pipelineManager = renderer.pipelines as Phaser.Renderer.WebGL.PipelineManager;
+      if (!pipelineManager.has("LuxeVignette")) {
+        pipelineManager.addPostPipeline("LuxeVignette", LuxeVignettePipeline as unknown as typeof Phaser.Renderer.WebGL.Pipelines.PostFXPipeline);
+      }
+      this.cameras.main.setPostPipeline("LuxeVignette");
+    }
+
     this.createGemTextures();
     this.computeLayout();
-    this.createHud();
     this.createBoard();
     this.createPauseOverlay();
     this.bindKeyboard();
@@ -68,62 +78,32 @@ export class GameScene extends Phaser.Scene {
       this.applyState(state);
     });
 
+    this.scale.on("resize", this.onScaleResize);
+
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.unsubscribe?.();
       this.unsubscribe = null;
       this.cleanupKeyboardBindings();
+      this.scale.off("resize", this.onScaleResize);
     });
   }
 
   private computeLayout() {
     const width = this.scale.width;
     const height = this.scale.height;
-    const maxBoardHeight = Math.min(BOARD_MAX_HEIGHT, height - HUD_HEIGHT - 44);
-    const maxBoardWidth = Math.min(BOARD_MAX_WIDTH, width - 120);
+    const topInset = Math.max(156, Math.floor(height * 0.2));
+    const bottomInset = 26;
 
-    this.tileSize = Math.floor(Math.min(maxBoardWidth / BOARD_COLS, maxBoardHeight / BOARD_ROWS));
+    const maxBoardHeight = Math.min(BOARD_MAX_HEIGHT, height - topInset - bottomInset);
+    const maxBoardWidth = Math.min(BOARD_MAX_WIDTH, width - 76);
+
+    this.tileSize = Math.max(46, Math.floor(Math.min(maxBoardWidth / BOARD_COLS, maxBoardHeight / BOARD_ROWS)));
+
     const boardWidth = this.tileSize * BOARD_COLS;
+    const boardHeight = this.tileSize * BOARD_ROWS;
 
     this.boardX = Math.floor((width - boardWidth) / 2);
-    this.boardY = HUD_HEIGHT;
-  }
-
-  private createHud() {
-    const width = this.scale.width;
-
-    this.titleText = this.add
-      .text(44, 36, "Bejeweled: Cascading Bonuses", {
-        fontFamily: UI_FONT,
-        fontSize: "56px",
-        fontStyle: "700",
-        color: UI_THEME.textPrimary,
-      })
-      .setOrigin(0, 0);
-
-    this.statsText = this.add
-      .text(44, 94, "", {
-        fontFamily: UI_FONT,
-        fontSize: "29px",
-        color: UI_THEME.textMuted,
-      })
-      .setOrigin(0, 0);
-
-    this.detailText = this.add
-      .text(44, 124, "", {
-        fontFamily: UI_FONT,
-        fontSize: "25px",
-        color: UI_THEME.textMuted,
-      })
-      .setOrigin(0, 0);
-
-    this.messageText = this.add
-      .text(width - 44, 124, "", {
-        fontFamily: UI_FONT,
-        fontSize: "25px",
-        color: UI_THEME.accent,
-        align: "right",
-      })
-      .setOrigin(1, 0);
+    this.boardY = Math.floor((height - boardHeight) / 2 + 34);
   }
 
   private createBoard() {
@@ -131,17 +111,30 @@ export class GameScene extends Phaser.Scene {
 
     const boardWidth = this.tileSize * BOARD_COLS;
     const boardHeight = this.tileSize * BOARD_ROWS;
+    const boardCenterX = this.boardX + boardWidth / 2;
+    const boardCenterY = this.boardY + boardHeight / 2;
 
-    this.add
-      .rectangle(
-        this.boardX + boardWidth / 2,
-        this.boardY + boardHeight / 2,
-        boardWidth + 24,
-        boardHeight + 24,
-        0x061732,
-        0.87,
-      )
-      .setStrokeStyle(2, 0x9dd4ff, 0.35);
+    this.boardContainer = this.add.container(0, 0);
+
+    const boardShadow = this.add
+      .rectangle(boardCenterX, boardCenterY + 8, boardWidth + 40, boardHeight + 42, 0x02060f, 0.55)
+      .setOrigin(0.5);
+
+    const boardPanel = this.add
+      .rectangle(boardCenterX, boardCenterY, boardWidth + 30, boardHeight + 30, 0x071933, 0.9)
+      .setOrigin(0.5)
+      .setStrokeStyle(2, 0xa7d8ff, 0.42);
+
+    const boardSheen = this.add
+      .rectangle(boardCenterX, boardCenterY - boardHeight * 0.33, boardWidth + 12, boardHeight * 0.45, 0x4bb7ff, 0.08)
+      .setOrigin(0.5)
+      .setAngle(-6);
+
+    this.boardPulse = this.add
+      .rectangle(boardCenterX, boardCenterY, boardWidth + 34, boardHeight + 34, 0x68d6ff, 0)
+      .setOrigin(0.5);
+
+    this.boardContainer.add([boardShadow, boardPanel, boardSheen, this.boardPulse]);
 
     for (let row = 0; row < BOARD_ROWS; row += 1) {
       const rowSprites: Phaser.GameObjects.Image[] = [];
@@ -150,12 +143,13 @@ export class GameScene extends Phaser.Scene {
         const x = this.boardX + col * this.tileSize + this.tileSize / 2;
         const y = this.boardY + row * this.tileSize + this.tileSize / 2;
 
-        this.add
-          .rectangle(x, y, this.tileSize - 3, this.tileSize - 3, 0x17345c, 0.38)
-          .setStrokeStyle(1, 0x89bbef, 0.18);
+        const cell = this.add
+          .rectangle(x, y, this.tileSize - 2, this.tileSize - 2, 0x19365f, 0.33)
+          .setStrokeStyle(1, 0x8fcbff, 0.2)
+          .setOrigin(0.5);
 
         const hitZone = this.add
-          .zone(x, y, this.tileSize - 3, this.tileSize - 3)
+          .zone(x, y, this.tileSize - 4, this.tileSize - 4)
           .setOrigin(0.5)
           .setInteractive({ useHandCursor: true });
 
@@ -163,8 +157,9 @@ export class GameScene extends Phaser.Scene {
           this.runtime.handleGemClick({ row, col });
         });
 
-        const gem = this.add.image(x, y, "gem-0").setDisplaySize(this.tileSize * 0.82, this.tileSize * 0.82);
+        const gem = this.add.image(x, y, "gem-0").setDisplaySize(this.tileSize * 0.84, this.tileSize * 0.84);
 
+        this.boardContainer.add([cell, hitZone, gem]);
         rowSprites.push(gem);
       }
 
@@ -173,8 +168,22 @@ export class GameScene extends Phaser.Scene {
 
     this.selectionRing = this.add
       .rectangle(0, 0, this.tileSize - 8, this.tileSize - 8)
-      .setStrokeStyle(4, 0xfafcff, 1)
+      .setStrokeStyle(3, 0xf8fcff, 1)
+      .setOrigin(0.5)
       .setVisible(false);
+
+    this.boardContainer.add(this.selectionRing);
+
+    if (this.selectionRing) {
+      this.tweens.add({
+        targets: this.selectionRing,
+        alpha: { from: 0.6, to: 1 },
+        duration: 800,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.InOut",
+      });
+    }
   }
 
   private createPauseOverlay() {
@@ -182,19 +191,28 @@ export class GameScene extends Phaser.Scene {
     const height = this.scale.height;
 
     const layer = this.add.container(width / 2, height / 2);
-    const mask = this.add.rectangle(0, 0, width, height, 0x001029, 0.46).setOrigin(0.5);
-    const panel = this.add.rectangle(0, 0, 440, 150, 0x0e2244, 0.96).setOrigin(0.5);
-    panel.setStrokeStyle(2, 0xaed8ff, 0.65);
+    const mask = this.add.rectangle(0, 0, width, height, 0x010717, 0.5).setOrigin(0.5);
+    const panel = this.add.rectangle(0, 0, 460, 160, 0x0b2247, 0.92).setOrigin(0.5);
+    panel.setStrokeStyle(2, 0x9cd9ff, 0.65);
+
     const text = this.add
-      .text(0, 0, "Paused", {
-        fontFamily: UI_FONT,
+      .text(0, -8, "Paused", {
+        fontFamily: '"Manrope", "Avenir Next", sans-serif',
         fontSize: "54px",
         fontStyle: "700",
         color: UI_THEME.warning,
       })
       .setOrigin(0.5);
 
-    layer.add([mask, panel, text]);
+    const hint = this.add
+      .text(0, 44, "Press P to resume", {
+        fontFamily: '"Manrope", "Avenir Next", sans-serif',
+        fontSize: "24px",
+        color: UI_THEME.textMuted,
+      })
+      .setOrigin(0.5);
+
+    layer.add([mask, panel, text, hint]);
     layer.setDepth(100);
     layer.setVisible(false);
     this.pauseOverlay = layer;
@@ -227,23 +245,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private applyState(state: GameState) {
-    if (state.mode === "title") {
-      this.scene.start("menu");
-      return;
-    }
-
-    if (state.mode === "howto") {
-      this.scene.start("howto");
-      return;
-    }
-
-    this.statsText?.setText(
-      `Mode: ${state.mode}     Score: ${state.score}     Moves: ${state.moves}     Chain: ${state.chainDepth}     Best chain: ${state.bestChain}`,
-    );
-    this.detailText?.setText(`Last multiplier: x${state.lastMultiplier}     Last move score: +${state.lastMoveScore}`);
-    this.messageText?.setText(state.message);
-
     this.pauseOverlay?.setVisible(state.mode === "paused");
+
+    const boardAlpha = state.mode === "playing" || state.mode === "paused" ? 1 : 0.45;
+    this.boardContainer?.setAlpha(boardAlpha);
 
     for (let row = 0; row < BOARD_ROWS; row += 1) {
       for (let col = 0; col < BOARD_COLS; col += 1) {
@@ -267,23 +272,67 @@ export class GameScene extends Phaser.Scene {
   }
 
   private playAnimationPulse(state: GameState) {
-    const isInvalid = state.pendingAnimations.some((entry) => entry.detail.includes("reverted-invalid"));
-    const duration = isInvalid ? 70 : 110;
-    const scaleTo = isInvalid ? 0.94 : 1.08;
+    const isInvalid = state.pendingAnimations.some((entry) => entry.detail.includes("invalid"));
+    const isResolve = state.pendingAnimations.some((entry) => entry.type === "resolve");
+
+    if (this.boardPulse) {
+      const tint = isInvalid ? 0xff7f9d : 0x6bd9ff;
+      this.boardPulse.setFillStyle(tint, isInvalid ? 0.16 : 0.2);
+      this.tweens.add({
+        targets: this.boardPulse,
+        alpha: { from: 0.32, to: 0 },
+        duration: isInvalid ? 180 : 260,
+        ease: "Sine.Out",
+      });
+    }
 
     for (let row = 0; row < BOARD_ROWS; row += 1) {
       for (let col = 0; col < BOARD_COLS; col += 1) {
         const target = this.gemSprites[row][col];
+        const baseScale = 1;
+        const peak = isInvalid ? 0.95 : 1.1;
         this.tweens.add({
           targets: target,
-          scaleX: scaleTo,
-          scaleY: scaleTo,
+          scaleX: peak,
+          scaleY: peak,
           yoyo: true,
-          duration,
+          duration: isInvalid ? 90 : 120,
           ease: isInvalid ? "Sine.InOut" : "Back.Out",
-          delay: isInvalid ? 0 : (row + col) * 8,
+          delay: isInvalid ? 0 : (row + col) * 7,
+          onComplete: () => {
+            target.setScale(baseScale);
+          },
         });
       }
+    }
+
+    if (isResolve || state.chainDepth > 1) {
+      const boardWidth = this.tileSize * BOARD_COLS;
+      const boardHeight = this.tileSize * BOARD_ROWS;
+      const centerX = this.boardX + boardWidth / 2;
+      const centerY = this.boardY + boardHeight / 2;
+      this.spawnSparkles(centerX, centerY, Math.min(24, 8 + state.chainDepth * 4));
+    }
+  }
+
+  private spawnSparkles(centerX: number, centerY: number, count: number) {
+    for (let index = 0; index < count; index += 1) {
+      const sparkle = this.add.circle(centerX, centerY, Phaser.Math.Between(2, 4), 0xa8e8ff, 0.8);
+      sparkle.setBlendMode(Phaser.BlendModes.ADD);
+
+      const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+      const distance = Phaser.Math.FloatBetween(24, 130);
+
+      this.tweens.add({
+        targets: sparkle,
+        x: centerX + Math.cos(angle) * distance,
+        y: centerY + Math.sin(angle) * distance,
+        alpha: 0,
+        scale: 0.15,
+        duration: Phaser.Math.Between(260, 460),
+        ease: "Sine.Out",
+        onComplete: () => sparkle.destroy(),
+      });
     }
   }
 
@@ -311,15 +360,15 @@ export class GameScene extends Phaser.Scene {
       graphics.closePath();
       graphics.fillPath();
 
-      graphics.lineStyle(6, 0xffffff, 0.35);
+      graphics.lineStyle(5, 0xffffff, 0.5);
       graphics.strokePath();
 
-      graphics.fillStyle(0xffffff, 0.22);
+      graphics.fillStyle(0xffffff, 0.25);
       graphics.beginPath();
-      graphics.moveTo(center - radius * 0.42, center - radius * 0.4);
-      graphics.lineTo(center - radius * 0.04, center - radius * 0.04);
-      graphics.lineTo(center - radius * 0.28, center + radius * 0.1);
-      graphics.lineTo(center - radius * 0.52, center - radius * 0.12);
+      graphics.moveTo(center - radius * 0.45, center - radius * 0.42);
+      graphics.lineTo(center - radius * 0.02, center - radius * 0.03);
+      graphics.lineTo(center - radius * 0.3, center + radius * 0.15);
+      graphics.lineTo(center - radius * 0.55, center - radius * 0.1);
       graphics.closePath();
       graphics.fillPath();
 
