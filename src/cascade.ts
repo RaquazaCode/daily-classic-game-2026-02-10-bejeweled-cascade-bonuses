@@ -9,6 +9,8 @@ export type CascadeResolution = {
   scoreDelta: number;
   cleared: number;
   chainDepth: number;
+  lastMultiplier: number;
+  bonusTrail: number[];
   pendingAnimations: PendingAnimation[];
 };
 
@@ -17,6 +19,8 @@ export function resolveCascadeLoop(startBoard: Board, rng: RNG): CascadeResoluti
   let scoreDelta = 0;
   let cleared = 0;
   let chainDepth = 0;
+  let lastMultiplier = 1;
+  const bonusTrail: number[] = [];
   const pendingAnimations: PendingAnimation[] = [];
 
   while (true) {
@@ -29,6 +33,8 @@ export function resolveCascadeLoop(startBoard: Board, rng: RNG): CascadeResoluti
     cleared += match.count;
 
     const multiplier = CASCADE_MULTIPLIER(chainDepth);
+    lastMultiplier = multiplier;
+    bonusTrail.push(multiplier);
     scoreDelta += match.count * SCORE_PER_GEM * multiplier;
 
     board = clearMatchedCells(board, match.cells);
@@ -46,6 +52,8 @@ export function resolveCascadeLoop(startBoard: Board, rng: RNG): CascadeResoluti
     scoreDelta,
     cleared,
     chainDepth,
+    lastMultiplier,
+    bonusTrail,
     pendingAnimations,
   };
 }

@@ -46,6 +46,8 @@ const state: GameState = {
   chainDepth: 0,
   bestChain: 0,
   lastMoveScore: 0,
+  lastMultiplier: 1,
+  bonusTrail: [],
   message: "Click to start",
   seed: GAME_SEED,
   pendingAnimations: [],

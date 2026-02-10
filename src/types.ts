@@ -29,6 +29,8 @@ export type GameState = {
   chainDepth: number;
   bestChain: number;
   lastMoveScore: number;
+  lastMultiplier: number;
+  bonusTrail: number[];
   message: string;
   seed: string;
   pendingAnimations: PendingAnimation[];

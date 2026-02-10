@@ -18,6 +18,7 @@ assert(boardSource.includes("createInitialBoard"), "board creation missing");
 assert(matchSource.includes("findMatches"), "match detection missing");
 assert(cascadeSource.includes("resolveCascadeLoop"), "cascade resolution missing");
 assert(cascadeSource.includes("refillBoard"), "refill stage missing");
+assert(cascadeSource.includes("bonusTrail"), "cascade bonus trail missing");
 assert(mainSource.includes("state"), "state bootstrap missing");
 
 console.log("Self-check passed: cascade engine primitives present.");
