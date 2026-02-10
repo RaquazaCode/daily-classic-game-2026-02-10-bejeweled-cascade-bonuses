@@ -1,63 +1,62 @@
 # Bejeweled Cascade Bonuses - Design
 
 ## Goal
-Deliver a deterministic Bejeweled-style match-3 experience with a modern Phaser UI, menu-first onboarding, and stable browser hooks for automation.
+Deliver a deterministic Bejeweled match-3 with a premium modern presentation using a hybrid React + Phaser architecture, while preserving automation contracts and seeded reproducibility.
 
-## UX Remediation Scope
-1. Full viewport fit with no page scroll.
-2. First-load menu with exactly two options:
-- `Start Game`
-- `How To Play`
-3. Three onboarding panels with explicit controls/rules/scoring guidance.
-4. Phaser scene migration while reusing deterministic core logic modules.
+## Architecture
+- Phaser remains authoritative for board state evolution, swap logic, cascade resolution, and keyboard gameplay controls.
+- React + Tailwind renders modern overlay UX:
+- top HUD (stats, mode badge, progress meter, status message)
+- menu modal
+- multi-panel how-to modal
+- bottom action/audio control tray
+- Runtime state bridge:
+- React subscribes to `BejeweledRuntime` updates and renders from current snapshot.
+- Phaser scenes consume the same runtime instance.
 
-## Scene Architecture
-- `MenuScene`
-- Displays title, summary, and two primary actions (`Start Game`, `How To Play`).
-- `HowToScene`
-- Multi-panel tutorial with `Back`, `Next`, `Start Game`.
-- `GameScene`
-- Renders board/HUD, handles gem click swaps, pause/restart/fullscreen, and feedback overlays.
+## Visual Direction
+- Minimal-luxury palette (deep navy base, cool-cyan accents, restrained glow).
+- Board-first composition with reduced HUD clutter inside canvas.
+- Subtle post-processing via `LuxeVignettePipeline` plus pulse/sparkle feedback on interactions.
 
-## Determinism + Logic Reuse
-- Seed: `2026-02-10-bejeweled-cascade-bonuses`
-- Source-of-truth logic remains in:
-- `board.ts`
-- `match.ts`
-- `cascade.ts`
-- `rng.ts`
-- No uncontrolled `Math.random()` in board evolution.
-- Restart always reproduces the same seeded initial state.
+## Audio Strategy
+- Local bundled CC0 loops in `assets/audio/`.
+- `AudioDirector` coordinates:
+- base ambient loop
+- optional glow layer for deeper chains
+- autoplay attempt + browser-block fallback on first interaction
+- inline music enable/disable control in overlay.
 
-## Inputs
-- Mouse: select and swap adjacent gems.
+## Input + Modes
+- Pointer swap behavior is active only in gameplay modes.
+- Title/how-to overlay buttons own mode transitions.
 - Keyboard:
 - `P` pause/resume
-- `R` restart
+- `R` restart (same seed)
 - `F` fullscreen
 
-## Scoring
-- Base: `50` per cleared gem.
-- Multipliers:
-- chain 1 -> `x1`
-- chain 2 -> `x2`
-- chain 3+ -> `x3`
+## Determinism
+- Seed remains `2026-02-10-bejeweled-cascade-bonuses`.
+- No uncontrolled randomness in runtime evolution.
+- Restart regenerates the same initial deterministic board.
 
-## Browser Hooks (Preserved Contract)
+## Preserved Hook Contract
 - `window.advanceTime(ms)`
 - `window.render_game_to_text()`
-- `GameSnapshot` keys unchanged:
-- `mode`, `score`, `moves`, `chainDepth`, `bestChain`, `board`, `selectedCell`, `pendingAnimations`, `seed`, `coordinateSystem`
 
-## Fit Policy
-- Phaser scale mode uses `FIT` + `CENTER_BOTH`.
-- CSS hard-locks `html/body/#app` to viewport with `overflow: hidden`.
-- Board and HUD are laid out to remain visible in single-screen capture at common desktop sizes.
+`GameSnapshot` keys remain preserved and explicit:
+- `mode`
+- `score`
+- `moves`
+- `chainDepth`
+- `bestChain`
+- `board`
+- `selectedCell`
+- `pendingAnimations`
+- `seed`
+- `coordinateSystem`
 
-## Done Means
-- No-scroll viewport behavior verified.
-- Menu-first onboarding + 3 tutorial panels verified.
-- Phaser runtime active and visually modernized.
-- Hook payload compatibility preserved.
-- `pnpm test` and `pnpm build` pass.
-- Playwright artifacts capture menu, tutorial, gameplay, invalid swap, pause, restart states.
+## Verification Approach
+- `pnpm test` self-check validates presence of runtime hooks, React/Tailwind integration, shader pipeline, and audio assets.
+- `pnpm build` validates type-safe production bundle.
+- `scripts/capture_react_luxe.mjs` captures menu/how-to/gameplay/invalid/pause/restart states with matching `state-*.json` snapshots.

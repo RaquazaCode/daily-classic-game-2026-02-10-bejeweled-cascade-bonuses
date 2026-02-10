@@ -2,27 +2,33 @@
 
 <p align="center">
   <strong>Bejeweled: Cascading Bonuses</strong><br/>
-  Phaser-powered, deterministic match-3 with menu-first onboarding and automation-safe hooks.
+  Hybrid React + Phaser match-3 with luxe visuals, deterministic runtime hooks, and ambient in-game soundtrack.
 </p>
 
 <p align="center">
-  <img alt="Bejeweled menu" src="assets/screenshots/menu.png" width="900" />
+  <img alt="React luxe menu" src="playwright/react-luxe/shot-0-menu.png" width="920" />
 </p>
 
-## GIF Captures
-### Menu + How To Play Flow
+## Visual Captures
+### Menu (React Overlay + Phaser Board)
 <p align="center">
-  <img alt="Menu state" src="playwright/ux-remediation/01-menu.png" width="860" />
+  <img alt="Menu overlay" src="playwright/react-luxe/shot-0-menu.png" width="900" />
 </p>
 
-### Gameplay (No Scroll, Full Viewport)
+### How To Play Panels
 <p align="center">
-  <img alt="Gameplay state" src="playwright/ux-remediation/05-game-start.png" width="860" />
+  <img alt="How To panel 2" src="playwright/react-luxe/shot-2-howto-2.png" width="900" />
 </p>
 
-### Invalid Swap + Pause
+### Gameplay + Invalid Swap + Pause
 <p align="center">
-  <img alt="Invalid swap state" src="playwright/ux-remediation/06-game-invalid-swap.png" width="860" />
+  <img alt="Gameplay" src="playwright/react-luxe/shot-4-playing.png" width="900" />
+</p>
+<p align="center">
+  <img alt="Invalid swap" src="playwright/react-luxe/shot-5-invalid-swap.png" width="900" />
+</p>
+<p align="center">
+  <img alt="Paused state" src="playwright/react-luxe/shot-6-paused.png" width="900" />
 </p>
 
 ## Quick Start
@@ -33,42 +39,47 @@ pnpm test
 pnpm build
 ```
 
-Open the local URL printed by Vite.
+## Music
+- Ambient luxe loops are bundled locally in `assets/audio/`.
+- Runtime starts music automatically; if browser blocks autoplay, first click/key unlocks audio.
+- UI controls allow quick `Music On/Off` toggling during play.
 
 ## How To Play
-- First screen is a menu with exactly two options: `Start Game` and `How To Play`.
-- `How To Play` is a 3-panel walkthrough covering controls, swap rules, and cascade scoring.
-- In-game controls:
-- Click one gem, then click an adjacent gem to swap.
-- `P` pause/resume.
-- `R` restart to seeded initial state.
-- `F` fullscreen toggle.
+- First screen has exactly two actions: `Start Game` and `How To Play`.
+- `How To Play` shows 3 panels:
+- Objective + Controls
+- Valid vs Invalid Swaps
+- Cascades + Scoring
+- Controls:
+- Mouse: select one gem, then an adjacent gem to swap
+- `P`: pause/resume
+- `R`: restart to same seed
+- `F`: fullscreen
 
 ## Rules
-- Only adjacent swaps are accepted.
-- Swaps that do not produce a match are reverted.
-- Valid swaps resolve match clear, drop, refill, then any additional cascades.
-- `mode` transitions: `title -> playing` via `startGame()`, `title -> howto -> playing`, and `playing <-> paused` (`resume()` returns paused to playing).
+- Adjacent swaps only.
+- Invalid swaps are reverted (no score/move gain).
+- Valid swaps resolve clear -> drop -> refill cascades.
+- Mode transitions:
+- `title -> playing` via `startGame()`
+- `title -> howto -> playing`
+- `playing <-> paused` via `pause()` / `resume()`
 
 ## Scoring
 - Base score: `50` points per cleared gem.
-- Cascade multipliers by chain depth:
-- Chain 1: `x1`
-- Chain 2: `x2`
-- Chain 3+: `x3`
-- Scripted deterministic validation (`?scripted_swap=1`) yields `score=550`, `moves=1`, `chainDepth=2`.
+- Chain multipliers:
+- chain 1: `x1`
+- chain 2: `x2`
+- chain 3+: `x3`
+- Deterministic scripted validation (`?scripted_swap=1`) still yields stable expected state evolution.
 
-## Twist
-Cascading bonuses reward setup play: one valid swap can chain through multiple resolve loops, each applying a larger multiplier.
+## Hook Contract
+Preserved browser hooks:
+- `window.advanceTime(ms)`
+- `window.render_game_to_text()`
 
-## Project Location
-- `{AUTOMATIONS_DIR}/daily-classic-game/games/2026-02-10-bejeweled-cascade-bonuses`
-
-Primary docs in-folder:
-- `README.md`
-- `design.md`
-- `progress.md`
-- `docs/plans/2026-02-10-bejeweled-cascade-bonuses-implementation.md`
+Preserved `GameSnapshot` fields:
+- `mode`, `score`, `moves`, `chainDepth`, `bestChain`, `board`, `selectedCell`, `pendingAnimations`, `seed`, `coordinateSystem`
 
 ## Verification
 ```bash
@@ -76,45 +87,42 @@ pnpm test
 pnpm build
 ```
 
-Automation hooks available in browser:
-- `window.advanceTime(ms)`
-- `window.render_game_to_text()`
+Capture updated visuals (with dev server running):
+```bash
+WEB_GAME_URL="http://127.0.0.1:4173/" node scripts/capture_react_luxe.mjs
+```
 
-Required snapshot keys preserved:
-- `mode`
-- `score`
-- `moves`
-- `chainDepth`
-- `bestChain`
-- `board`
-- `selectedCell`
-- `pendingAnimations`
-- `seed`
-- `coordinateSystem`
+## Project Location
+- `{AUTOMATIONS_DIR}/daily-classic-game/games/2026-02-10-bejeweled-cascade-bonuses`
 
-## Project Layout
+## Layout
 ```text
 src/
-  main.ts                     # Phaser bootstrap + browser hooks
-  constants.ts                # seed, board dimensions, scoring, timing
-  types.ts                    # shared state + payload types
-  rng.ts                      # deterministic seeded PRNG
-  board.ts                    # board initialization and swap helpers
-  match.ts                    # match scanning and clear logic
-  cascade.ts                  # clear/drop/refill resolve loop with multipliers
+  main.tsx                      # React root
+  style.css                     # Tailwind + base styles
+  react/
+    AppShell.tsx                # overlay UI + runtime bridge + audio controls
+    useRuntimeSnapshot.ts       # runtime subscription hook
+    howto_panels.ts             # 3-panel tutorial content
+    audio.ts                    # ambient soundtrack director
   phaser/
-    game.ts                   # Phaser config (FIT + CENTER_BOTH)
-    runtime.ts                # deterministic game state runtime
-    runtime_store.ts          # shared runtime singleton
+    game.ts                     # Phaser boot
+    runtime.ts                  # deterministic state machine
+    runtime_store.ts            # shared runtime instance
+    pipelines/
+      LuxeVignettePipeline.ts   # post-process vignette shader
     scenes/
-      MenuScene.ts            # Start Game / How To Play entry
-      HowToScene.ts           # 3-panel tutorial with Back/Next/Start Game
-      GameScene.ts            # gameplay rendering/input, pause/restart/fullscreen
+      GameScene.ts              # board render/input/fx
     ui/
-      theme.ts                # color and typography tokens
-      components.ts           # reusable backdrop/panel/button helpers
+      theme.ts
+      components.ts
+assets/
+  audio/
+    ambient-luxe-base.wav
+    ambient-luxe-glow.wav
 scripts/
   self_check.mjs
+  capture_react_luxe.mjs
 playwright/
-  ux-remediation/             # menu/howto/gameplay verification artifacts
+  react-luxe/
 ```

@@ -1,13 +1,16 @@
 {
+  "notes": [
+    "Legacy action payload retained for deterministic mouse/keyboard bursts.",
+    "For reliable visual captures with React+Phaser overlay, use: node scripts/capture_react_luxe.mjs while dev server is running."
+  ],
   "steps": [
-    { "frames": 6 },
-    { "buttons": ["left_mouse_button"], "mouse_x": 640, "mouse_y": 500, "frames": 4 },
-    { "buttons": ["left_mouse_button"], "mouse_x": 640, "mouse_y": 500, "frames": 4 },
-    { "buttons": ["left_mouse_button"], "mouse_x": 640, "mouse_y": 360, "frames": 6 },
-    { "buttons": ["left_mouse_button"], "mouse_x": 394, "mouse_y": 250, "frames": 4 },
-    { "buttons": ["left_mouse_button"], "mouse_x": 394, "mouse_y": 330, "frames": 6 },
-    { "buttons": ["p"], "frames": 4 },
-    { "buttons": ["p"], "frames": 4 },
-    { "buttons": ["r"], "frames": 8 }
+    { "frames": 8 },
+    { "buttons": ["left_mouse_button"], "mouse_x": 640, "mouse_y": 430, "frames": 6 },
+    { "frames": 8 },
+    { "buttons": ["left_mouse_button"], "mouse_x": 412, "mouse_y": 198, "frames": 5 },
+    { "buttons": ["left_mouse_button"], "mouse_x": 477, "mouse_y": 198, "frames": 8 },
+    { "buttons": ["p"], "frames": 5 },
+    { "buttons": ["p"], "frames": 5 },
+    { "buttons": ["r"], "frames": 10 }
   ]
 }

@@ -11,7 +11,7 @@ void main(void) {
   vec4 color = texture2D(uMainSampler, uv);
 
   float dist = distance(uv, vec2(0.5, 0.5));
-  float vignette = smoothstep(0.85, 0.24, dist);
+  float vignette = 1.0 - smoothstep(0.24, 0.85, dist);
   float shimmer = 0.012 * sin((uv.y * 26.0) + (uTime * 0.9));
 
   color.rgb += vec3(0.0, 0.02, 0.06) * shimmer;
