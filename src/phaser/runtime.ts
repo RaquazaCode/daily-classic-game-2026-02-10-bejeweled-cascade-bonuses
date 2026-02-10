@@ -11,7 +11,6 @@ const DEFAULT_TITLE_MESSAGE = "Select Start Game or How To Play";
 
 export class BejeweledRuntime {
   private rng: RNG;
-  private simulatedMs = 0;
   private listeners = new Set<RuntimeListener>();
   private state: GameState;
 
@@ -62,11 +61,8 @@ export class BejeweledRuntime {
     };
   }
 
-  advanceTime(ms: number) {
-    if (!Number.isFinite(ms) || ms < 0) {
-      return;
-    }
-    this.simulatedMs += ms;
+  advanceTime(_ms: number) {
+    // Deterministic runtime currently processes transitions synchronously.
   }
 
   enterMenu() {
