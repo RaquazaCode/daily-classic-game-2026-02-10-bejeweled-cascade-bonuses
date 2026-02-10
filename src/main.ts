@@ -112,6 +112,14 @@ function attemptSwap(from: Cell, to: Cell) {
   state.message = `Resolved chain depth ${resolved.chainDepth} (+${resolved.scoreDelta})`;
 }
 
+function applyScriptedSwap(from: Cell, to: Cell) {
+  if (state.mode === "title") {
+    state.mode = "playing";
+  }
+  state.selectedCell = from;
+  attemptSwap(from, to);
+}
+
 gameCanvas.addEventListener("click", (event) => {
   const rect = gameCanvas.getBoundingClientRect();
   const scaleX = gameCanvas.width / rect.width;
@@ -163,6 +171,17 @@ window.addEventListener("keydown", (event) => {
     toggleFullscreen();
   }
 });
+
+const params = new URLSearchParams(window.location.search);
+if (params.has("autostart")) {
+  state.mode = "playing";
+  state.message = "Autostart enabled";
+}
+
+if (params.has("scripted_swap")) {
+  applyScriptedSwap({ row: 0, col: 2 }, { row: 0, col: 3 });
+  state.message = "Scripted valid swap executed";
+}
 
 function step(_dt: number) {
   // Deterministic loop hook for automation stepping.
