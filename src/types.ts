@@ -1,4 +1,4 @@
-export type Mode = "title" | "playing" | "paused";
+export type Mode = "title" | "howto" | "playing" | "paused";
 
 export type Cell = {
   row: number;
@@ -35,4 +35,17 @@ export type GameState = {
   seed: string;
   pendingAnimations: PendingAnimation[];
   rngState: number;
+};
+
+export type GameSnapshot = {
+  mode: Mode;
+  score: number;
+  moves: number;
+  chainDepth: number;
+  bestChain: number;
+  board: Board;
+  selectedCell: Cell | null;
+  pendingAnimations: PendingAnimation[];
+  seed: string;
+  coordinateSystem: string;
 };
