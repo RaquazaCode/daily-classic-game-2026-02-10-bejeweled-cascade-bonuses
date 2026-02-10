@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
@@ -10,9 +10,9 @@ const appShellSource = readFileSync(resolve(root, "src/react/AppShell.tsx"), "ut
 const styleSource = readFileSync(resolve(root, "src/style.css"), "utf8");
 const packageSource = readFileSync(resolve(root, "package.json"), "utf8");
 const runtimeSource = readFileSync(resolve(root, "src/phaser/runtime.ts"), "utf8");
-const menuSceneSource = readFileSync(resolve(root, "src/phaser/scenes/MenuScene.ts"), "utf8");
-const howToSceneSource = readFileSync(resolve(root, "src/phaser/scenes/HowToScene.ts"), "utf8");
 const gameSceneSource = readFileSync(resolve(root, "src/phaser/scenes/GameScene.ts"), "utf8");
+const pipelineSource = readFileSync(resolve(root, "src/phaser/pipelines/LuxeVignettePipeline.ts"), "utf8");
+const audioSource = readFileSync(resolve(root, "src/react/audio.ts"), "utf8");
 
 function assert(condition, message) {
   if (!condition) {
@@ -27,20 +27,32 @@ assert(matchSource.includes("findMatches"), "match detection missing");
 assert(matchSource.includes("clearMatchedCells"), "match clearing missing");
 assert(cascadeSource.includes("resolveCascadeLoop"), "cascade resolution missing");
 assert(cascadeSource.includes("bonusTrail"), "cascade bonus trail missing");
+
 assert(packageSource.includes('"phaser"'), "phaser dependency missing");
+assert(packageSource.includes('"react"'), "react dependency missing");
+assert(packageSource.includes('"tailwindcss"'), "tailwind dependency missing");
+assert(styleSource.includes("@tailwind"), "tailwind directives missing");
 assert(styleSource.includes("overflow: hidden"), "no-scroll CSS requirement missing");
-assert(menuSceneSource.includes("Start Game"), "menu Start Game option missing");
-assert(menuSceneSource.includes("How To Play"), "menu How To Play option missing");
-assert(howToSceneSource.includes("Back"), "How To Play Back control missing");
-assert(howToSceneSource.includes("Next"), "How To Play Next control missing");
-assert(howToSceneSource.includes("Start Game"), "How To Play Start Game control missing");
-assert(gameSceneSource.includes("keyP"), "pause key handler missing in Phaser scene");
-assert(gameSceneSource.includes("keyR"), "restart key handler missing in Phaser scene");
+
 assert(mainSource.includes("AppShell"), "React AppShell bootstrap missing");
+assert(appShellSource.includes("Start Game"), "Start Game UI missing");
+assert(appShellSource.includes("How To Play"), "How To Play UI missing");
 assert(appShellSource.includes("window.advanceTime"), "advanceTime hook missing");
 assert(appShellSource.includes("window.render_game_to_text"), "render_game_to_text hook missing");
-assert(styleSource.includes(""), "tailwind directives missing");
-assert(runtimeSource.includes("mode"), "render text payload mode missing");
-assert(runtimeSource.includes("pendingAnimations"), "render text payload pendingAnimations missing");
+assert(appShellSource.includes("AudioDirector"), "audio director integration missing");
 
-console.log("Self-check passed: Phaser UI contracts, hooks, and deterministic core present.");
+assert(audioSource.includes("ambient-luxe-base.wav"), "base music asset wiring missing");
+assert(audioSource.includes("ambient-luxe-glow.wav"), "glow music asset wiring missing");
+assert(existsSync(resolve(root, "assets/audio/ambient-luxe-base.wav")), "base audio file missing");
+assert(existsSync(resolve(root, "assets/audio/ambient-luxe-glow.wav")), "glow audio file missing");
+
+assert(gameSceneSource.includes("keyP"), "pause key handler missing in GameScene");
+assert(gameSceneSource.includes("keyR"), "restart key handler missing in GameScene");
+assert(gameSceneSource.includes("setPostPipeline"), "shader pipeline usage missing");
+assert(pipelineSource.includes("fragShader"), "custom shader pipeline missing");
+
+assert(runtimeSource.includes("mode"), "snapshot payload mode missing");
+assert(runtimeSource.includes("pendingAnimations"), "snapshot payload pendingAnimations missing");
+assert(runtimeSource.includes("coordinateSystem"), "snapshot coordinateSystem missing");
+
+console.log("Self-check passed: React+Phaser UI, audio, hooks, and deterministic core present.");

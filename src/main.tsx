@@ -1,4 +1,3 @@
-import React from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
 import { AppShell } from "./react/AppShell";
@@ -8,8 +7,4 @@ if (!app) {
   throw new Error("App root missing");
 }
 
-createRoot(app).render(
-  <React.StrictMode>
-    <AppShell />
-  </React.StrictMode>,
-);
+createRoot(app).render(<AppShell />);
