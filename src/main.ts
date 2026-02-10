@@ -1,14 +1,8 @@
 import "./style.css";
 import {
-  BOARD_COLS,
-  BOARD_ROWS,
-  BOARD_X,
-  BOARD_Y,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   GAME_SEED,
-  GEM_COLORS,
-  TILE_SIZE,
   STEP_SECONDS,
 } from "./constants";
 import { createInitialBoard, isAdjacent, swapCells } from "./board";
@@ -16,6 +10,7 @@ import { resolveCascadeLoop } from "./cascade";
 import { hasMatches } from "./match";
 import { cellFromCanvasPoint, isSameCell } from "./input";
 import { createRng, seedFromString } from "./rng";
+import { render } from "./render";
 import type { Cell, GameState } from "./types";
 
 const app = document.querySelector<HTMLDivElement>("#app");
@@ -173,43 +168,6 @@ function step(_dt: number) {
   // Deterministic loop hook for automation stepping.
 }
 
-function drawFrame() {
-  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  const gradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-  gradient.addColorStop(0, "#0a213a");
-  gradient.addColorStop(1, "#071224");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-  for (let row = 0; row < BOARD_ROWS; row += 1) {
-    for (let col = 0; col < BOARD_COLS; col += 1) {
-      const x = BOARD_X + col * TILE_SIZE;
-      const y = BOARD_Y + row * TILE_SIZE;
-      const gem = state.board[row][col];
-      ctx.fillStyle = GEM_COLORS[gem];
-      ctx.fillRect(x + 8, y + 8, TILE_SIZE - 16, TILE_SIZE - 16);
-
-      if (state.selectedCell?.row === row && state.selectedCell.col === col) {
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 3;
-        ctx.strokeRect(x + 5, y + 5, TILE_SIZE - 10, TILE_SIZE - 10);
-      }
-    }
-  }
-
-  ctx.fillStyle = "#eaf4ff";
-  ctx.font = "700 28px Trebuchet MS, sans-serif";
-  ctx.fillText("Bejeweled: Cascading Bonuses", BOARD_X, 42);
-
-  ctx.font = "16px Trebuchet MS, sans-serif";
-  ctx.fillText(`Mode: ${state.mode}`, BOARD_X, 70);
-  ctx.fillText(`Score: ${state.score}`, BOARD_X + 170, 70);
-  ctx.fillText(`Moves: ${state.moves}`, BOARD_X + 320, 70);
-  ctx.fillText(`Chain: ${state.chainDepth}`, BOARD_X + 450, 70);
-  ctx.fillText(`Best chain: ${state.bestChain}`, BOARD_X + 560, 70);
-  ctx.fillText(state.message, BOARD_X, 98);
-}
-
 function loop(now: number) {
   const delta = Math.min(0.1, (now - last) / 1000);
   last = now;
@@ -220,7 +178,7 @@ function loop(now: number) {
     accumulator -= STEP_SECONDS;
   }
 
-  drawFrame();
+  render(state, ctx);
   requestAnimationFrame(loop);
 }
 
@@ -231,7 +189,7 @@ window.advanceTime = (ms: number) => {
   for (let i = 0; i < steps; i += 1) {
     step(STEP_SECONDS);
   }
-  drawFrame();
+  render(state, ctx);
 };
 
 window.render_game_to_text = () => {
