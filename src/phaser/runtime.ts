@@ -136,7 +136,7 @@ export class BejeweledRuntime {
 
   handleGemClick(cell: Cell) {
     if (this.state.mode === "title" || this.state.mode === "howto") {
-      this.startGame();
+      // In overlay-driven UX, title/howto clicks should not auto-start gameplay.
       return;
     }
 
