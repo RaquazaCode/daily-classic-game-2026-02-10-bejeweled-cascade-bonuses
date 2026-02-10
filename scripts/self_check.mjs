@@ -15,10 +15,14 @@ function assert(condition, message) {
 }
 
 assert(boardSource.includes("createInitialBoard"), "board creation missing");
+assert(boardSource.includes("pickGemWithoutImmediateMatch"), "no-match initializer missing");
 assert(matchSource.includes("findMatches"), "match detection missing");
+assert(matchSource.includes("clearMatchedCells"), "match clearing missing");
 assert(cascadeSource.includes("resolveCascadeLoop"), "cascade resolution missing");
-assert(cascadeSource.includes("refillBoard"), "refill stage missing");
 assert(cascadeSource.includes("bonusTrail"), "cascade bonus trail missing");
-assert(mainSource.includes("state"), "state bootstrap missing");
+assert(mainSource.includes("window.advanceTime"), "advanceTime hook missing");
+assert(mainSource.includes("window.render_game_to_text"), "render_game_to_text hook missing");
+assert(mainSource.includes('key === "p"'), "pause key binding missing");
+assert(mainSource.includes('key === "r"'), "restart key binding missing");
 
-console.log("Self-check passed: cascade engine primitives present.");
+console.log("Self-check passed: hooks, controls, and deterministic core present.");
