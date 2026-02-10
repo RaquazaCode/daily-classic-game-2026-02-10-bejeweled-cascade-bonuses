@@ -10,7 +10,7 @@ export function createBejeweledGame(parent: string, runtime: BejeweledRuntime) {
   setRuntime(runtime);
 
   const config: Phaser.Types.Core.GameConfig = {
-    type: Phaser.AUTO,
+    type: Phaser.CANVAS,
     parent,
     width: GAME_WIDTH,
     height: GAME_HEIGHT,
