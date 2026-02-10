@@ -31,6 +31,7 @@ export class GameScene extends Phaser.Scene {
   private keyF?: Phaser.Input.Keyboard.Key;
 
   private lastAnimationSignature = "";
+  private resizeDebounceId: ReturnType<typeof setTimeout> | null = null;
 
   private readonly onPauseKeyDown = () => {
     this.runtime.togglePause();
@@ -49,7 +50,14 @@ export class GameScene extends Phaser.Scene {
   };
 
   private readonly onScaleResize = () => {
-    this.scene.restart();
+    if (this.resizeDebounceId) {
+      clearTimeout(this.resizeDebounceId);
+    }
+
+    this.resizeDebounceId = setTimeout(() => {
+      this.resizeDebounceId = null;
+      this.scene.restart();
+    }, 200);
   };
 
   constructor() {
@@ -85,6 +93,10 @@ export class GameScene extends Phaser.Scene {
       this.unsubscribe = null;
       this.cleanupKeyboardBindings();
       this.scale.off("resize", this.onScaleResize);
+      if (this.resizeDebounceId) {
+        clearTimeout(this.resizeDebounceId);
+        this.resizeDebounceId = null;
+      }
     });
   }
 
