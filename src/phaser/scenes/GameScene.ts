@@ -27,7 +27,6 @@ export class GameScene extends Phaser.Scene {
   private pauseOverlay?: Phaser.GameObjects.Container;
 
   private gemSprites: Phaser.GameObjects.Image[][] = [];
-  private cellFrames: Phaser.GameObjects.Rectangle[][] = [];
   private selectionRing?: Phaser.GameObjects.Rectangle;
 
   private keyP?: Phaser.Input.Keyboard.Key;
@@ -112,7 +111,6 @@ export class GameScene extends Phaser.Scene {
 
   private createBoard() {
     this.gemSprites = [];
-    this.cellFrames = [];
 
     const boardWidth = this.tileSize * BOARD_COLS;
     const boardHeight = this.tileSize * BOARD_ROWS;
@@ -130,30 +128,29 @@ export class GameScene extends Phaser.Scene {
 
     for (let row = 0; row < BOARD_ROWS; row += 1) {
       const rowSprites: Phaser.GameObjects.Image[] = [];
-      const rowFrames: Phaser.GameObjects.Rectangle[] = [];
 
       for (let col = 0; col < BOARD_COLS; col += 1) {
         const x = this.boardX + col * this.tileSize + this.tileSize / 2;
         const y = this.boardY + row * this.tileSize + this.tileSize / 2;
 
-        const frame = this.add
+        this.add
           .rectangle(x, y, this.tileSize - 3, this.tileSize - 3, 0x17345c, 0.38)
           .setStrokeStyle(1, 0x89bbef, 0.18);
 
-        const gem = this.add
-          .image(x, y, "gem-0")
-          .setDisplaySize(this.tileSize * 0.82, this.tileSize * 0.82)
+        const hitZone = this.add
+          .zone(x, y, this.tileSize - 3, this.tileSize - 3)
+          .setOrigin(0.5)
           .setInteractive({ useHandCursor: true });
 
-        gem.on("pointerdown", () => {
+        hitZone.on("pointerdown", () => {
           this.runtime.handleGemClick({ row, col });
         });
 
-        rowFrames.push(frame);
+        const gem = this.add.image(x, y, "gem-0").setDisplaySize(this.tileSize * 0.82, this.tileSize * 0.82);
+
         rowSprites.push(gem);
       }
 
-      this.cellFrames.push(rowFrames);
       this.gemSprites.push(rowSprites);
     }
 
