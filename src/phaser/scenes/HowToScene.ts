@@ -9,6 +9,8 @@ type HowToPanel = {
   body: string;
 };
 
+const CASCADE_MULTIPLIER_TEXT = CASCADE_MULTIPLIERS.map((multiplier) => `x${multiplier}`).join(" -> ");
+
 const PANELS: HowToPanel[] = [
   {
     title: "1. Objective + Controls",
@@ -22,9 +24,7 @@ const PANELS: HowToPanel[] = [
   },
   {
     title: "3. Cascades + Scoring",
-    body: `Base score is ${SCORE_PER_GEM} per cleared gem. Chain depth boosts score with multipliers ${CASCADE_MULTIPLIERS.join(
-      " -> x",
-    )}+. Deeper cascades increase best chain and total score faster.`,
+    body: `Base score is ${SCORE_PER_GEM} per cleared gem. Chain depth boosts score with multipliers ${CASCADE_MULTIPLIER_TEXT}. Deeper cascades increase best chain and total score faster.`,
   },
 ];
 

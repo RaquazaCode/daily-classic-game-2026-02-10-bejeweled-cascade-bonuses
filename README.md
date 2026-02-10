@@ -48,7 +48,7 @@ Open the local URL printed by Vite.
 - Only adjacent swaps are accepted.
 - Swaps that do not produce a match are reverted.
 - Valid swaps resolve match clear, drop, refill, then any additional cascades.
-- `mode` transitions: `title -> howto -> playing -> paused`.
+- `mode` transitions: `title -> playing` via `startGame()`, `title -> howto -> playing`, and `playing <-> paused` (`resume()` returns paused to playing).
 
 ## Scoring
 - Base score: `50` points per cleared gem.
@@ -62,7 +62,7 @@ Open the local URL printed by Vite.
 Cascading bonuses reward setup play: one valid swap can chain through multiple resolve loops, each applying a larger multiplier.
 
 ## Project Location
-- `/Users/testaccountforsystem-wideissues/.codex/automations/daily-classic-game/games/2026-02-10-bejeweled-cascade-bonuses`
+- `{AUTOMATIONS_DIR}/daily-classic-game/games/2026-02-10-bejeweled-cascade-bonuses`
 
 Primary docs in-folder:
 - `README.md`
@@ -90,6 +90,7 @@ Required snapshot keys preserved:
 - `selectedCell`
 - `pendingAnimations`
 - `seed`
+- `coordinateSystem`
 
 ## Project Layout
 ```text

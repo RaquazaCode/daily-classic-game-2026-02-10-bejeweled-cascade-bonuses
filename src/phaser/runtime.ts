@@ -54,7 +54,7 @@ export class BejeweledRuntime {
       chainDepth: this.state.chainDepth,
       bestChain: this.state.bestChain,
       board: this.state.board.map((row) => row.slice()),
-      selectedCell: this.state.selectedCell,
+      selectedCell: this.state.selectedCell ? { ...this.state.selectedCell } : null,
       pendingAnimations: this.state.pendingAnimations.slice(),
       seed: this.state.seed,
       coordinateSystem: "Board matrix with origin (row=0,col=0) at top-left.",
@@ -85,18 +85,34 @@ export class BejeweledRuntime {
     this.emit();
   }
 
+  pause() {
+    if (this.state.mode !== "playing") {
+      return;
+    }
+
+    this.state.mode = "paused";
+    this.state.message = "Paused";
+    this.emit();
+  }
+
+  resume() {
+    if (this.state.mode !== "paused") {
+      return;
+    }
+
+    this.state.mode = "playing";
+    this.state.message = "Resumed";
+    this.emit();
+  }
+
   togglePause() {
     if (this.state.mode === "playing") {
-      this.state.mode = "paused";
-      this.state.message = "Paused";
-      this.emit();
+      this.pause();
       return;
     }
 
     if (this.state.mode === "paused") {
-      this.state.mode = "playing";
-      this.state.message = "Resumed";
-      this.emit();
+      this.resume();
     }
   }
 
@@ -121,6 +137,7 @@ export class BejeweledRuntime {
   handleGemClick(cell: Cell) {
     if (this.state.mode === "title" || this.state.mode === "howto") {
       this.startGame();
+      return;
     }
 
     if (this.state.mode === "paused") {
@@ -149,18 +166,16 @@ export class BejeweledRuntime {
       this.state.mode = "playing";
     }
     this.state.selectedCell = from;
-    this.attemptSwap(from, to);
-    this.state.message = "Scripted valid swap executed";
-    this.emit();
+    this.attemptSwap(from, to, { successMessage: "Scripted valid swap executed" });
   }
 
-  private attemptSwap(from: Cell, to: Cell) {
+  private attemptSwap(from: Cell, to: Cell, options?: { successMessage?: string }) {
     if (!isAdjacent(from, to)) {
       this.state.selectedCell = to;
       this.state.pendingAnimations = [{ type: "swap", detail: "rejected-non-adjacent" }];
       this.state.message = "Select adjacent gems to swap";
       this.emit();
-      return;
+      return false;
     }
 
     const swapped = swapCells(this.state.board, from, to);
@@ -169,7 +184,7 @@ export class BejeweledRuntime {
       this.state.pendingAnimations = [{ type: "swap", detail: "reverted-invalid" }];
       this.state.message = "Invalid swap: no match created";
       this.emit();
-      return;
+      return false;
     }
 
     const resolved = resolveCascadeLoop(swapped, this.rng);
@@ -187,8 +202,9 @@ export class BejeweledRuntime {
     ];
     this.state.selectedCell = null;
     this.state.rngState = this.rng.getState();
-    this.state.message = `Resolved chain depth ${resolved.chainDepth} (+${resolved.scoreDelta})`;
+    this.state.message = options?.successMessage ?? `Resolved chain depth ${resolved.chainDepth} (+${resolved.scoreDelta})`;
     this.emit();
+    return true;
   }
 
   private isSameCell(a: Cell | null, b: Cell | null) {

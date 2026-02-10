@@ -46,8 +46,8 @@ Deliver a deterministic Bejeweled-style match-3 experience with a modern Phaser 
 ## Browser Hooks (Preserved Contract)
 - `window.advanceTime(ms)`
 - `window.render_game_to_text()`
-- Snapshot keys unchanged:
-- `mode`, `score`, `moves`, `chainDepth`, `bestChain`, `board`, `selectedCell`, `pendingAnimations`, `seed`
+- `GameSnapshot` keys unchanged:
+- `mode`, `score`, `moves`, `chainDepth`, `bestChain`, `board`, `selectedCell`, `pendingAnimations`, `seed`, `coordinateSystem`
 
 ## Fit Policy
 - Phaser scale mode uses `FIT` + `CENTER_BOTH`.

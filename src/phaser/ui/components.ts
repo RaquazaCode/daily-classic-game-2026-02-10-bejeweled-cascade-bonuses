@@ -136,6 +136,7 @@ export function createButton(scene: Phaser.Scene, options: ButtonOptions): UiBut
           new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height),
           Phaser.Geom.Rectangle.Contains,
         );
+        bg.setFillStyle(UI_THEME.buttonFill, 1);
       } else {
         bg.setFillStyle(UI_THEME.buttonFill, 0.45);
       }
