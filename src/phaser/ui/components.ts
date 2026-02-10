@@ -20,26 +20,34 @@ export function drawBackdrop(scene: Phaser.Scene) {
   const height = scene.scale.height;
 
   const bg = scene.add.graphics();
-  const gradientSteps = 22;
+  const gradientSteps = 28;
+
   for (let i = 0; i < gradientSteps; i += 1) {
-    const t = i / (gradientSteps - 1);
     const color = Phaser.Display.Color.Interpolate.ColorWithColor(
       Phaser.Display.Color.ValueToColor(UI_THEME.bgTop),
       Phaser.Display.Color.ValueToColor(UI_THEME.bgBottom),
       gradientSteps - 1,
       i,
     );
+
     bg.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1);
     bg.fillRect(0, (height / gradientSteps) * i, width, height / gradientSteps + 2);
   }
 
-  bg.lineStyle(2, UI_THEME.border, 0.18);
-  for (let i = 0; i < 14; i += 1) {
-    const x = 80 + i * ((width - 160) / 13);
-    bg.beginPath();
-    bg.moveTo(x, 10 + i * 2);
-    bg.lineTo(x - 50, 120 + i * 4);
-    bg.strokePath();
+  const accent = scene.add.graphics();
+  accent.fillStyle(0x59b8ff, 0.08);
+  accent.fillEllipse(width * 0.22, height * 0.12, width * 0.46, height * 0.34);
+  accent.fillStyle(0x396dbe, 0.07);
+  accent.fillEllipse(width * 0.76, height * 0.08, width * 0.42, height * 0.26);
+
+  const traces = scene.add.graphics();
+  traces.lineStyle(2, UI_THEME.border, 0.2);
+  for (let i = 0; i < 15; i += 1) {
+    const x = 84 + i * ((width - 168) / 14);
+    traces.beginPath();
+    traces.moveTo(x, 16 + i * 2);
+    traces.lineTo(x - 52, 122 + i * 4);
+    traces.strokePath();
   }
 
   return bg;
@@ -55,7 +63,7 @@ export function createGlassPanel(
 ) {
   const panel = scene.add.container(x, y);
   const bg = scene.add.rectangle(0, 0, width, height, UI_THEME.panel, alpha).setOrigin(0.5);
-  const glow = scene.add.rectangle(0, 0, width + 2, height + 2, UI_THEME.border, 0.07).setOrigin(0.5);
+  const glow = scene.add.rectangle(0, 0, width + 6, height + 6, UI_THEME.border, 0.07).setOrigin(0.5);
   const border = scene.add.rectangle(0, 0, width, height).setOrigin(0.5);
   border.setStrokeStyle(2, UI_THEME.border, 0.42);
 
