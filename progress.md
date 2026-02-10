@@ -31,3 +31,9 @@ Original prompt: Implement the 2026-02-10 daily classic game run with continuity
 - Finalize automation metadata updates for 2026-02-10 (`catalog`, `.automation/state`, `INDEX`, report).
 - Open PR from `codex/2026-02-10-bejeweled-cascade-bonuses` to `main` and merge.
 - Run post-run repo hardening script on new GitHub repo.
+
+## Final Verification (2026-02-10)
+- `pnpm test` (bejeweled): pass
+- `pnpm build` (bejeweled): pass
+- `pnpm test` (asteroids migrated path): pass
+- `pnpm build` (asteroids migrated path): pass
