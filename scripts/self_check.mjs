@@ -48,6 +48,8 @@ assert(existsSync(resolve(root, "assets/audio/ambient-luxe-glow.wav")), "glow au
 
 assert(gameSceneSource.includes("keyP"), "pause key handler missing in GameScene");
 assert(gameSceneSource.includes("keyR"), "restart key handler missing in GameScene");
+assert(gameSceneSource.includes("resizeDebounceId"), "resize debounce timer missing in GameScene");
+assert(gameSceneSource.includes("clearTimeout(this.resizeDebounceId)"), "resize debounce cleanup missing in GameScene");
 assert(gameSceneSource.includes("setPostPipeline"), "shader pipeline usage missing");
 assert(pipelineSource.includes("fragShader"), "custom shader pipeline missing");
 
